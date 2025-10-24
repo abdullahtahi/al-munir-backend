@@ -1,0 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BANK_REPOSITORY = exports.DEPENDON_REPOSITORY = exports.STUDENT_REPOSITORY = exports.ADMISSION_REPOSITORY = exports.USER_REPOSITORY = void 0;
+exports.USER_REPOSITORY = 'USER_REPOSITORY';
+exports.ADMISSION_REPOSITORY = 'ADMISSION_REPOSITORY';
+exports.STUDENT_REPOSITORY = 'STUDENT_REPOSITORY';
+exports.DEPENDON_REPOSITORY = 'DEPENDON_REPOSITORY';
+exports.BANK_REPOSITORY = 'BANK_REPOSITORY';
+//# sourceMappingURL=repositories.js.map

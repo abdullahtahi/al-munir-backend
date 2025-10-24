@@ -1,0 +1,129 @@
+### Al-Munir Consultancy API Examples
+### Base URL: http://localhost:3000/api/v1
+
+### 1. Register new user
+POST http://localhost:3000/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "phone": "+923001234567",
+  "cnic": "12345-6789012-3",
+  "address": "123 Main Street, Lahore",
+  "city": "Lahore",
+  "sponsor_referral_code": ""
+}
+
+### 2. Login user
+POST http://localhost:3000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+
+### 3. Get user profile (requires authentication)
+GET http://localhost:3000/api/v1/auth/profile
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 4. Register with referral code
+POST http://localhost:3000/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane.smith@example.com",
+  "password": "password123",
+  "phone": "+923001234568",
+  "cnic": "12345-6789012-4",
+  "address": "456 Oak Street, Karachi",
+  "city": "Karachi",
+  "sponsor_referral_code": "ABC123"
+}
+
+### 5. Get all Consultant (Admin only)
+GET http://localhost:3000/api/v1/Consultant?page=1&limit=10
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 6. Search Consultant (Admin/Manager only)
+GET http://localhost:3000/api/v1/Consultant/search?q=john&page=1&limit=10
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 7. Get team structure
+GET http://localhost:3000/api/v1/Consultant/USER_ID/team-structure?depth=3
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 8. Get team statistics
+GET http://localhost:3000/api/v1/Consultant/USER_ID/team-stats
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 9. Update user profile
+PATCH http://localhost:3000/api/v1/Consultant/profile
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "first_name": "Updated John",
+  "phone": "+923001234569",
+  "address": "Updated address"
+}
+
+### 10. Update user status (Admin only)
+PATCH http://localhost:3000/api/v1/Consultant/USER_ID/status
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "status": "active"
+}
+
+### 11. Update user level (Admin only)
+PATCH http://localhost:3000/api/v1/Consultant/USER_ID/level
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "level": 3
+}
+
+### 12. Change password
+PATCH http://localhost:3000/api/v1/auth/change-password
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "current_password": "password123",
+  "new_password": "newpassword123"
+}
+
+### 13. Forgot password
+POST http://localhost:3000/api/v1/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com"
+}
+
+### 14. Reset password
+POST http://localhost:3000/api/v1/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "RESET_TOKEN_FROM_FORGOT_PASSWORD",
+  "new_password": "resetpassword123"
+}
+
+### 15. Logout
+POST http://localhost:3000/api/v1/auth/logout
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Notes:
+### - Replace YOUR_JWT_TOKEN_HERE with actual JWT token from login response
+### - Replace USER_ID with actual user UUID
+### - Some endpoints require specific roles (Admin, Manager, etc.)
+### - Update .env file with correct database credentials before testing
