@@ -33,19 +33,19 @@ let ConsultantService = class ConsultantService {
                 const bank = await this.db.repo.Bank.create({
                     name: bankName,
                     accountNumber,
-                    accountAddress
+                    accountAddress,
                 }, { transaction });
                 console.log("line 32", bank.id);
                 if (bank.id) {
                     await this.db.repo.Consultant.create({
                         bankId: bank.id,
-                        sponsorId: sponsorId || null,
-                        ...rest
+                        sponsorId: sponsorId == "" ? null : sponsorId,
+                        ...rest,
                     }, { transaction });
                 }
             });
             return {
-                message: "Consultant Created Sucessfully"
+                message: "Consultant Created Sucessfully",
             };
         }
         catch (error) {
@@ -63,26 +63,28 @@ let ConsultantService = class ConsultantService {
                 [sequelize_1.Op.or]: [
                     { firstName: { [sequelize_1.Op.iLike]: namePattern } },
                     { lastName: { [sequelize_1.Op.iLike]: namePattern } },
-                    this.sequelize.literal(`CONCAT("Consultant"."firstName", ' ', "Consultant"."lastName") ILIKE '${namePattern}'`)
-                ]
+                    this.sequelize.literal(`CONCAT("Consultant"."firstName", ' ', "Consultant"."lastName") ILIKE '${namePattern}'`),
+                ],
             };
         }
-        if (!_.isEmpty(params.sponsorId) && params.sponsorId !== 'null') {
+        if (!_.isEmpty(params.sponsorId) && params.sponsorId !== "null") {
             where.sponsorId = params.sponsorId;
         }
-        if (!_.isEmpty(params.status) && params.status !== 'null') {
+        if (!_.isEmpty(params.status) && params.status !== "null") {
             where.status = params.status;
         }
-        if (!_.isEmpty(params.cnic) && params.cnic !== 'null') {
+        if (!_.isEmpty(params.cnic) && params.cnic !== "null") {
             where.cnic = { [sequelize_1.Op.like]: `%${params.cnic}%` };
         }
         const users = await this.db.repo.Consultant.scope(null).findAndCountAll({
             ...pagination,
             where,
-            include: [{
+            include: [
+                {
                     model: this.db.repo.Bank,
-                }],
-            order: [['createdAt', 'DESC']],
+                },
+            ],
+            order: [["createdAt", "DESC"]],
         });
         return users;
     }
@@ -108,29 +110,30 @@ let ConsultantService = class ConsultantService {
         try {
             const user = await this.findById(id);
             if (!user) {
-                throw new common_1.NotFoundException('User not found');
+                throw new common_1.NotFoundException("User not found");
             }
-            const { password, bankName, accountNumber, accountAddress, bankId, consultantId, ...rest } = updateUserDto;
+            const { password, bankName, accountNumber, accountAddress, bankId, sponsorId, ...rest } = updateUserDto;
             await this.sequelize.transaction(async (transaction) => {
                 await this.db.repo.Bank.update({
                     name: bankName,
                     accountNumber: accountNumber,
-                    accountAddress: accountAddress
+                    accountAddress: accountAddress,
                 }, {
                     where: {
-                        id: bankId
+                        id: bankId,
                     },
                 }, { transaction });
                 await this.db.repo.Consultant.update({
-                    ...rest
+                    consultantId: sponsorId,
+                    ...rest,
                 }, {
                     where: {
-                        id
-                    }
+                        id,
+                    },
                 }, { transaction });
             });
             return {
-                message: "Updated SuccessFully"
+                message: "Updated SuccessFully",
             };
         }
         catch (error) {
@@ -141,7 +144,7 @@ let ConsultantService = class ConsultantService {
     async updatePassword(id, newPassword) {
         const user = await this.findById(id);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
         await user.update({ password: newPassword });
     }
@@ -151,7 +154,7 @@ let ConsultantService = class ConsultantService {
     async updateStatus(id, status) {
         const user = await this.findById(id);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
         await user.update({ status });
         return user.reload();
@@ -159,7 +162,7 @@ let ConsultantService = class ConsultantService {
     async updateLevel(id, level) {
         const user = await this.findById(id);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
         await user.update({ level });
         return user.reload();
@@ -167,7 +170,7 @@ let ConsultantService = class ConsultantService {
     async getTeamStructure(userId, depth = 3) {
         const user = await this.findById(userId);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
         return this.buildTeamTree(userId, depth);
     }
@@ -176,12 +179,27 @@ let ConsultantService = class ConsultantService {
             return null;
         }
         const user = await this.db.repo.Consultant.findByPk(userId, {
-            attributes: ['id', 'first_name', 'last_name', 'email', 'level', 'status', 'total_admissions'],
+            attributes: [
+                "id",
+                "first_name",
+                "last_name",
+                "email",
+                "level",
+                "status",
+                "total_admissions",
+            ],
             include: [
                 {
                     model: consultant_entity_1.Consultant,
-                    as: 'downlines',
-                    attributes: ['id', 'first_name', 'last_name', 'email', 'level', 'status'],
+                    as: "downlines",
+                    attributes: [
+                        "id",
+                        "first_name",
+                        "last_name",
+                        "email",
+                        "level",
+                        "status",
+                    ],
                 },
             ],
         });
@@ -205,12 +223,12 @@ let ConsultantService = class ConsultantService {
     async getTeamStats(userId) {
         const user = await this.findById(userId);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
         const allDownlines = await this.getAllDownlines(userId);
         const stats = {
             total_team_members: allDownlines.length,
-            active_members: allDownlines.filter(u => u.status === enums_1.ConsultantStatus.ACTIVE).length,
+            active_members: allDownlines.filter((u) => u.status === enums_1.ConsultantStatus.ACTIVE).length,
             total_team_admissions: allDownlines.reduce((sum, u) => sum + u.totalAdmissions, 0),
             level_distribution: {},
             admission_type_distribution: {
@@ -219,24 +237,37 @@ let ConsultantService = class ConsultantService {
                 [enums_1.AdmissionType.TECHNICAL]: 0,
             },
         };
-        allDownlines.forEach(user => {
+        allDownlines.forEach((user) => {
             const level = `level_${user.level}`;
-            stats.level_distribution[level] = (stats.level_distribution[level] || 0) + 1;
+            stats.level_distribution[level] =
+                (stats.level_distribution[level] || 0) + 1;
         });
-        allDownlines.forEach(user => {
-            stats.admission_type_distribution[enums_1.AdmissionType.SCHOOL] += user.schoolAdmissions;
-            stats.admission_type_distribution[enums_1.AdmissionType.ACADEMY] += user.academyAdmissions;
-            stats.admission_type_distribution[enums_1.AdmissionType.TECHNICAL] += user.technicalAdmissions;
+        allDownlines.forEach((user) => {
+            stats.admission_type_distribution[enums_1.AdmissionType.SCHOOL] +=
+                user.schoolAdmissions;
+            stats.admission_type_distribution[enums_1.AdmissionType.ACADEMY] +=
+                user.academyAdmissions;
+            stats.admission_type_distribution[enums_1.AdmissionType.TECHNICAL] +=
+                user.technicalAdmissions;
         });
         return stats;
     }
     async getAllDownlines(userId, collected = []) {
         const directDownlines = await this.db.repo.Consultant.findAll({
             where: { sponsorId: userId },
-            attributes: ['id', 'first_name', 'last_name', 'level', 'status', 'school_admissions', 'academy_admissions', 'technical_admissions'],
+            attributes: [
+                "id",
+                "first_name",
+                "last_name",
+                "level",
+                "status",
+                "school_admissions",
+                "academy_admissions",
+                "technical_admissions",
+            ],
         });
         for (const downline of directDownlines) {
-            if (!collected.find(u => u.id === downline.id)) {
+            if (!collected.find((u) => u.id === downline.id)) {
                 collected.push(downline);
                 await this.getAllDownlines(downline.id, collected);
             }
@@ -258,14 +289,14 @@ let ConsultantService = class ConsultantService {
             where: whereClause,
             limit,
             offset,
-            order: [['createdAt', 'DESC']],
+            order: [["createdAt", "DESC"]],
         });
         return { users: rows, total: count };
     }
     async updateAdmissionCounts(userId, admissionType) {
         const user = await this.findById(userId);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
         const updateData = {};
         switch (admissionType) {
@@ -284,7 +315,7 @@ let ConsultantService = class ConsultantService {
     async updateBalance(userId, amount, transaction) {
         const user = await this.findById(userId);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
         const newTotalEarnings = parseFloat(user.totalEarnings.toString()) + amount;
         const newAvailableBalance = parseFloat(user.availableBalance.toString()) + amount;
@@ -296,9 +327,12 @@ let ConsultantService = class ConsultantService {
     async remove(id) {
         const user = await this.findById(id);
         if (!user) {
-            throw new common_1.NotFoundException('User not found');
+            throw new common_1.NotFoundException("User not found");
         }
-        await user.update({ status: enums_1.ConsultantStatus.INACTIVE, deletedAt: new Date() });
+        await user.update({
+            status: enums_1.ConsultantStatus.INACTIVE,
+            deletedAt: new Date(),
+        });
     }
 };
 exports.ConsultantService = ConsultantService;

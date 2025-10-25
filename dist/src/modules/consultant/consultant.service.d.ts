@@ -1,8 +1,8 @@
-import { Sequelize, Transaction } from 'sequelize';
-import { PaginationDto } from '../../common/dto/pagination.dto';
-import { ConsultantStatus, UserLevel, AdmissionType } from '../../common/enums';
-import { Consultant } from '@/modules/consultant/consultant.entity';
-import { GlobalDbService } from '../global-db/global-db.service';
+import { Sequelize, Transaction } from "sequelize";
+import { PaginationDto } from "../../common/dto/pagination.dto";
+import { ConsultantStatus, UserLevel, AdmissionType } from "../../common/enums";
+import { Consultant } from "@/modules/consultant/consultant.entity";
+import { GlobalDbService } from "../global-db/global-db.service";
 export declare class ConsultantService {
     private readonly db;
     private readonly sequelize;
