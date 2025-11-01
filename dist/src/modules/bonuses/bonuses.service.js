@@ -20,105 +20,124 @@ const constants_1 = require("../../common/constants");
 const consultant_service_1 = require("../consultant/consultant.service");
 const global_db_service_1 = require("../global-db/global-db.service");
 const constants_2 = require("../../constants");
+const helpers_1 = require("../../helpers");
+const _ = require("lodash");
 let BonusesService = class BonusesService {
     constructor(db, consultantService) {
         this.db = db;
         this.consultantService = consultantService;
     }
-    async calculateAndDistributeBonuses(admissionId) {
-        const admission = await this.db.repo.Admission.findByPk(admissionId, {
-            include: [{ model: this.db.repo.Consultant, }],
-        });
-        if (!admission) {
-            throw new Error('Admission not found');
-        }
-        const transaction = await this.db.repo.Consultant.sequelize.transaction();
+    async calculateAndDistributeBonuses(admission, transaction) {
         try {
             await this.calculateDirectBonus(admission, transaction);
             await this.calculateIndirectBonuses(admission, transaction);
             await this.calculateGlobalBonuses(admission, transaction);
-            await transaction.commit();
         }
         catch (error) {
-            await transaction.rollback();
+            console.error("Bonus calculation error:", error);
             throw error;
         }
     }
     async calculateDirectBonus(admission, transaction) {
-        const user = admission.user;
+        const consultant = await this.db.repo.Consultant.findOne({
+            where: {
+                id: admission?.consultantId,
+            },
+        });
+        const user = consultant;
         const bonusRates = constants_1.BONUS_RATES[user.level];
         if (!bonusRates || !bonusRates.direct) {
             return;
         }
-        const bonusAmount = (admission.fee_amount * bonusRates.direct) / 100;
+        const bonusAmount = (admission.feeAmount * bonusRates.direct) / 100;
         await this.db.repo.Bonus.create({
-            user_id: user.id,
-            from_user_id: user.id,
-            bonus_type: enums_1.BonusType.DIRECT,
+            consultantId: user?.dataValues?.id,
+            fromConsultantId: user?.dataValues?.id,
+            bonusType: enums_1.BonusType.DIRECT,
             amount: bonusAmount,
             percentage: bonusRates.direct,
-            base_amount: admission.fee_amount,
-            reference_id: admission.id,
-            reference_type: 'admission',
-            description: `Direct bonus for ${admission.admission_type} admission`,
-            status: 'completed',
-            processed_at: new Date(),
+            baseAmount: admission.feeAmount,
+            admissionId: admission.id,
+            referenceType: "admission",
+            description: `Direct bonus for ${admission.admissionType} admission`,
+            status: "completed",
+            processedAt: new Date(),
         }, { transaction });
-        await this.consultantService.updateBalance(user.id, bonusAmount, transaction);
-        await this.db.repo.transaction.create({
-            user_id: user.id,
-            transaction_type: enums_1.TransactionType.BONUS_CREDIT,
+        await this.updateBalance(user, bonusAmount, transaction);
+        await this.db.repo.Transactions.create({
+            consultantId: user.id,
+            transactionType: enums_1.TransactionType.BONUS_CREDIT,
             amount: bonusAmount,
-            net_amount: bonusAmount,
-            reference_id: admission.id,
-            reference_type: 'admission_bonus',
-            description: `Direct bonus for ${admission.course_name} admission`,
-            status: 'completed',
-            processed_at: new Date(),
+            netAmount: bonusAmount,
+            admissionId: admission.id,
+            referenceType: "admission_bonus",
+            description: `Direct bonus for ${admission.admissionInClass} admission`,
+            status: "completed",
+            processedAt: new Date(),
+        }, { transaction });
+    }
+    async updateBalance(user, amount, transaction) {
+        const newTotalEarnings = Math.floor(Number(user.totalEarnings || 0) + Number(amount || 0));
+        const newAvailableBalance = Math.floor(Number(user.availableBalance || 0) + Number(amount || 0));
+        console.log({
+            totalEarnings: newTotalEarnings,
+            availableBalance: newAvailableBalance,
+        });
+        await this.db.repo.Consultant.update({
+            totalEarnings: newTotalEarnings,
+            availableBalance: newAvailableBalance,
+        }, {
+            where: {
+                id: user.id,
+            },
         }, { transaction });
     }
     async calculateIndirectBonuses(admission, transaction) {
-        const directUser = admission.user;
-        let currentUser = directUser;
+        const directConsultant = await this.db.repo.Consultant.findByPk(admission.consultantId);
+        if (!directConsultant) {
+            return;
+        }
+        let currentSponsorId = directConsultant.sponsorId;
         let level = 1;
         const maxLevels = 4;
-        while (level <= maxLevels && currentUser.sponsor_id) {
-            const sponsor = await this.db.repo.Consultant.findByPk(currentUser.sponsor_id);
+        while (level <= maxLevels && currentSponsorId) {
+            const sponsor = await this.db.repo.Consultant.findByPk(currentSponsorId);
             if (!sponsor) {
                 break;
             }
             const bonusRates = constants_1.BONUS_RATES[sponsor.level];
             const bonusKey = this.getIndirectBonusKey(level);
             if (bonusRates && bonusRates[bonusKey]) {
-                const bonusAmount = (admission.fee_amount * bonusRates[bonusKey]) / 100;
+                const bonusAmount = Number((admission.feeAmount * bonusRates[bonusKey]) / 100 || 0);
+                console.log(`Level ${level} indirect bonus for sponsor ${sponsor.id}:`, bonusAmount);
                 await this.db.repo.Bonus.create({
-                    user_id: sponsor.id,
-                    from_user_id: directUser.id,
-                    bonus_type: this.getBonusType(level),
+                    consultantId: sponsor.id,
+                    fromConsultantId: directConsultant.id,
+                    bonusType: this.getBonusType(level),
                     amount: bonusAmount,
                     percentage: bonusRates[bonusKey],
-                    base_amount: admission.fee_amount,
-                    level_depth: level,
-                    reference_id: admission.id,
-                    reference_type: 'admission',
-                    description: `Level ${level} indirect bonus from ${directUser.first_name} ${directUser.last_name}`,
-                    status: 'completed',
-                    processed_at: new Date(),
+                    baseAmount: admission.feeAmount,
+                    levelDepth: level,
+                    admissionId: admission.id,
+                    referenceType: "admission",
+                    description: `Level ${level} indirect bonus from ${directConsultant.firstName} ${directConsultant.lastName}`,
+                    status: "completed",
+                    processedAt: new Date(),
                 }, { transaction });
-                await this.consultantService.updateBalance(sponsor.id, bonusAmount, transaction);
-                await this.db.repo.transaction.create({
-                    user_id: sponsor.id,
-                    transaction_type: enums_1.TransactionType.BONUS_CREDIT,
+                await this.updateBalance(sponsor, bonusAmount, transaction);
+                await this.db.repo.Transactions.create({
+                    consultantId: sponsor.id,
+                    transactionType: enums_1.TransactionType.BONUS_CREDIT,
                     amount: bonusAmount,
-                    net_amount: bonusAmount,
-                    reference_id: admission.id,
-                    reference_type: 'team_bonus',
-                    description: `Level ${level} team bonus from ${directUser.first_name} ${directUser.last_name}`,
-                    status: 'completed',
-                    processed_at: new Date(),
+                    netAmount: bonusAmount,
+                    admissionId: admission.id,
+                    referenceType: "team_bonus",
+                    description: `Level ${level} team bonus from ${directConsultant.firstName} ${directConsultant.lastName}`,
+                    status: "completed",
+                    processedAt: new Date(),
                 }, { transaction });
             }
-            currentUser = sponsor;
+            currentSponsorId = sponsor.sponsorId;
             level++;
         }
     }
@@ -128,57 +147,67 @@ let BonusesService = class BonusesService {
                 level: {
                     [sequelize_1.Op.in]: [5, 6, 7, 8],
                 },
-                status: 'active',
+                status: "active",
             },
         });
         for (const user of eligibleUsers) {
             const bonusRates = constants_1.BONUS_RATES[user.level];
             if (bonusRates && bonusRates.global) {
-                const bonusAmount = (admission.fee_amount * bonusRates.global) / 100;
+                const bonusAmount = (admission.feeAmount * bonusRates.global) / 100;
                 await this.db.repo.Bonus.create({
-                    user_id: user.id,
-                    from_user_id: admission.user.id,
-                    bonus_type: enums_1.BonusType.GLOBAL,
+                    consultantId: user.id,
+                    fromConsultantId: admission.consultantId,
+                    bonusType: enums_1.BonusType.GLOBAL,
                     amount: bonusAmount,
                     percentage: bonusRates.global,
-                    base_amount: admission.fee_amount,
-                    reference_id: admission.id,
-                    reference_type: 'admission',
-                    description: `Global bonus for ${admission.admission_type} admission`,
-                    status: 'completed',
-                    processed_at: new Date(),
+                    baseAmount: admission.feeAmount,
+                    admissionId: admission.id,
+                    referenceType: "admission",
+                    description: `Global bonus for ${admission.admissionType} admission`,
+                    status: "completed",
+                    processedAt: new Date(),
                 }, { transaction });
-                await this.consultantService.updateBalance(user.id, bonusAmount, transaction);
-                await this.db.repo.transaction.create({
-                    user_id: user.id,
-                    transaction_type: enums_1.TransactionType.BONUS_CREDIT,
+                await this.updateBalance(user, bonusAmount, transaction);
+                await this.db.repo.Transactions.create({
+                    consultantId: user.id,
+                    transactionType: enums_1.TransactionType.BONUS_CREDIT,
                     amount: bonusAmount,
-                    net_amount: bonusAmount,
-                    reference_id: admission.id,
-                    reference_type: 'global_bonus',
+                    netAmount: bonusAmount,
+                    admissionId: admission.id,
+                    referenceType: "global_bonus",
                     description: `Global bonus from company performance`,
-                    status: 'completed',
-                    processed_at: new Date(),
+                    status: "completed",
+                    processedAt: new Date(),
                 }, { transaction });
             }
         }
     }
     getIndirectBonusKey(level) {
         switch (level) {
-            case 1: return 'indirect_level_1';
-            case 2: return 'indirect_level_2';
-            case 3: return 'indirect_level_3';
-            case 4: return 'indirect_level_4';
-            default: return '';
+            case 1:
+                return "indirect_level_1";
+            case 2:
+                return "indirect_level_2";
+            case 3:
+                return "indirect_level_3";
+            case 4:
+                return "indirect_level_4";
+            default:
+                return "";
         }
     }
     getBonusType(level) {
         switch (level) {
-            case 1: return enums_1.BonusType.INDIRECT_LEVEL_1;
-            case 2: return enums_1.BonusType.INDIRECT_LEVEL_2;
-            case 3: return enums_1.BonusType.INDIRECT_LEVEL_3;
-            case 4: return enums_1.BonusType.INDIRECT_LEVEL_4;
-            default: return enums_1.BonusType.INDIRECT_LEVEL_1;
+            case 1:
+                return enums_1.BonusType.INDIRECT_LEVEL_1;
+            case 2:
+                return enums_1.BonusType.INDIRECT_LEVEL_2;
+            case 3:
+                return enums_1.BonusType.INDIRECT_LEVEL_3;
+            case 4:
+                return enums_1.BonusType.INDIRECT_LEVEL_4;
+            default:
+                return enums_1.BonusType.INDIRECT_LEVEL_1;
         }
     }
     async getUserBonuses(userId, pagination) {
@@ -187,11 +216,11 @@ let BonusesService = class BonusesService {
             include: [
                 {
                     model: this.db.repo.Consultant,
-                    as: 'fromUser',
-                    attributes: ['id', 'first_name', 'last_name', 'email'],
+                    as: "fromUser",
+                    attributes: ["id", "first_name", "last_name", "email"],
                 },
             ],
-            order: [['created_at', 'DESC']],
+            order: [["created_at", "DESC"]],
             limit: pagination?.limit || 10,
             offset: pagination?.offset || 0,
         });
@@ -201,11 +230,17 @@ let BonusesService = class BonusesService {
         const bonuses = await this.db.repo.Bonus.findAll({
             where: { user_id: userId },
             attributes: [
-                'bonus_type',
-                [this.db.repo.Bonus.sequelize.fn('COUNT', this.db.repo.Bonus.sequelize.col('id')), 'count'],
-                [this.db.repo.Bonus.sequelize.fn('SUM', this.db.repo.Bonus.sequelize.col('amount')), 'total_amount'],
+                "bonus_type",
+                [
+                    this.db.repo.Bonus.sequelize.fn("COUNT", this.db.repo.Bonus.sequelize.col("id")),
+                    "count",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("SUM", this.db.repo.Bonus.sequelize.col("amount")),
+                    "total_amount",
+                ],
             ],
-            group: ['bonus_type'],
+            group: ["bonus_type"],
         });
         const stats = {
             total_bonuses: 0,
@@ -236,7 +271,7 @@ let BonusesService = class BonusesService {
                     percentage: 5,
                     base_amount: progressionBonus,
                     description: `Progression bonus for advancing from Level ${oldLevel} to Level ${newLevel}`,
-                    status: 'completed',
+                    status: "completed",
                     processed_at: new Date(),
                 }, { transaction });
                 await this.consultantService.updateBalance(Number(userId), progressionBonus, transaction);
@@ -245,9 +280,9 @@ let BonusesService = class BonusesService {
                     transaction_type: enums_1.TransactionType.BONUS_CREDIT,
                     amount: progressionBonus,
                     net_amount: progressionBonus,
-                    reference_type: 'progression',
+                    reference_type: "progression",
                     description: `Level progression bonus: ${oldLevel} → ${newLevel}`,
-                    status: 'completed',
+                    status: "completed",
                     processed_at: new Date(),
                 }, { transaction });
                 await transaction.commit();
@@ -260,13 +295,13 @@ let BonusesService = class BonusesService {
     }
     calculateProgressionBonusAmount(oldLevel, newLevel) {
         const bonusAmounts = {
-            '4_to_3': 5000,
-            '3_to_2': 10000,
-            '2_to_1': 15000,
-            '1_to_manager': 25000,
-            'manager_to_senior': 35000,
-            'senior_to_area': 50000,
-            'area_to_sector': 75000,
+            "4_to_3": 5000,
+            "3_to_2": 10000,
+            "2_to_1": 15000,
+            "1_to_manager": 25000,
+            manager_to_senior: 35000,
+            senior_to_area: 50000,
+            area_to_sector: 75000,
         };
         const key = `${oldLevel}_to_${newLevel}`;
         return bonusAmounts[key] || 0;
@@ -274,18 +309,36 @@ let BonusesService = class BonusesService {
     async getSystemBonusStats() {
         const stats = await this.db.repo.Bonus.findAll({
             attributes: [
-                'bonus_type',
-                [this.db.repo.Bonus.sequelize.fn('COUNT', this.db.repo.Bonus.sequelize.col('id')), 'count'],
-                [this.db.repo.Bonus.sequelize.fn('SUM', this.db.repo.Bonus.sequelize.col('amount')), 'total_amount'],
-                [this.db.repo.Bonus.sequelize.fn('AVG', this.db.repo.Bonus.sequelize.col('amount')), 'avg_amount'],
+                "bonus_type",
+                [
+                    this.db.repo.Bonus.sequelize.fn("COUNT", this.db.repo.Bonus.sequelize.col("id")),
+                    "count",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("SUM", this.db.repo.Bonus.sequelize.col("amount")),
+                    "total_amount",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("AVG", this.db.repo.Bonus.sequelize.col("amount")),
+                    "avg_amount",
+                ],
             ],
-            group: ['bonus_type'],
+            group: ["bonus_type"],
         });
         const totalStats = await this.db.repo.Bonus.findOne({
             attributes: [
-                [this.db.repo.Bonus.sequelize.fn('COUNT', this.db.repo.Bonus.sequelize.col('id')), 'total_bonuses'],
-                [this.db.repo.Bonus.sequelize.fn('SUM', this.db.repo.Bonus.sequelize.col('amount')), 'total_amount'],
-                [this.db.repo.Bonus.sequelize.fn('AVG', this.db.repo.Bonus.sequelize.col('amount')), 'avg_amount'],
+                [
+                    this.db.repo.Bonus.sequelize.fn("COUNT", this.db.repo.Bonus.sequelize.col("id")),
+                    "total_bonuses",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("SUM", this.db.repo.Bonus.sequelize.col("amount")),
+                    "total_amount",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("AVG", this.db.repo.Bonus.sequelize.col("amount")),
+                    "avg_amount",
+                ],
             ],
         });
         const result = {
@@ -309,9 +362,9 @@ let BonusesService = class BonusesService {
             earned_date: {
                 [sequelize_1.Op.between]: [
                     new Date(`${year}-01-01`),
-                    new Date(`${year}-12-31 23:59:59`)
-                ]
-            }
+                    new Date(`${year}-12-31 23:59:59`),
+                ],
+            },
         };
         if (userId) {
             whereClause.user_id = userId;
@@ -319,17 +372,38 @@ let BonusesService = class BonusesService {
         const stats = await this.db.repo.Bonus.findAll({
             where: whereClause,
             attributes: [
-                [this.db.repo.Bonus.sequelize.fn('EXTRACT', this.db.repo.Bonus.sequelize.literal('MONTH FROM earned_date')), 'month'],
-                [this.db.repo.Bonus.sequelize.fn('COUNT', this.db.repo.Bonus.sequelize.col('id')), 'bonuses'],
-                [this.db.repo.Bonus.sequelize.fn('SUM', this.db.repo.Bonus.sequelize.col('amount')), 'total_amount'],
-                [this.db.repo.Bonus.sequelize.fn('AVG', this.db.repo.Bonus.sequelize.col('amount')), 'avg_amount'],
+                [
+                    this.db.repo.Bonus.sequelize.fn("EXTRACT", this.db.repo.Bonus.sequelize.literal("MONTH FROM earned_date")),
+                    "month",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("COUNT", this.db.repo.Bonus.sequelize.col("id")),
+                    "bonuses",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("SUM", this.db.repo.Bonus.sequelize.col("amount")),
+                    "total_amount",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("AVG", this.db.repo.Bonus.sequelize.col("amount")),
+                    "avg_amount",
+                ],
             ],
-            group: [this.db.repo.Bonus.sequelize.fn('EXTRACT', this.db.repo.Bonus.sequelize.literal('MONTH FROM earned_date'))],
-            order: [[this.db.repo.Bonus.sequelize.fn('EXTRACT', this.db.repo.Bonus.sequelize.literal('MONTH FROM earned_date')), 'ASC']],
+            group: [
+                this.db.repo.Bonus.sequelize.fn("EXTRACT", this.db.repo.Bonus.sequelize.literal("MONTH FROM earned_date")),
+            ],
+            order: [
+                [
+                    this.db.repo.Bonus.sequelize.fn("EXTRACT", this.db.repo.Bonus.sequelize.literal("MONTH FROM earned_date")),
+                    "ASC",
+                ],
+            ],
         });
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
             month: i + 1,
-            month_name: new Date(2000, i, 1).toLocaleString('default', { month: 'long' }),
+            month_name: new Date(2000, i, 1).toLocaleString("default", {
+                month: "long",
+            }),
             bonuses: 0,
             total_amount: 0,
             avg_amount: 0,
@@ -346,47 +420,61 @@ let BonusesService = class BonusesService {
         });
         return monthlyData;
     }
-    async getTopBonusEarners(limit = 10, period = 'month') {
+    async getTopBonusEarners(limit = 10, period = "month") {
         let whereClause = {};
-        if (period === 'month') {
+        if (period === "month") {
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
             whereClause = {
                 earned_date: {
-                    [sequelize_1.Op.between]: [startOfMonth, endOfMonth]
-                }
+                    [sequelize_1.Op.between]: [startOfMonth, endOfMonth],
+                },
             };
         }
-        else if (period === 'year') {
+        else if (period === "year") {
             const now = new Date();
             const startOfYear = new Date(now.getFullYear(), 0, 1);
             const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
             whereClause = {
                 earned_date: {
-                    [sequelize_1.Op.between]: [startOfYear, endOfYear]
-                }
+                    [sequelize_1.Op.between]: [startOfYear, endOfYear],
+                },
             };
         }
         const earners = await this.db.repo.Bonus.findAll({
             where: whereClause,
             attributes: [
-                'user_id',
-                [this.db.repo.Bonus.sequelize.fn('COUNT', this.db.repo.Bonus.sequelize.col('Bonus.id')), 'total_bonuses'],
-                [this.db.repo.Bonus.sequelize.fn('SUM', this.db.repo.Bonus.sequelize.col('amount')), 'total_amount'],
-                [this.db.repo.Bonus.sequelize.fn('AVG', this.db.repo.Bonus.sequelize.col('amount')), 'avg_amount'],
+                "user_id",
+                [
+                    this.db.repo.Bonus.sequelize.fn("COUNT", this.db.repo.Bonus.sequelize.col("Bonus.id")),
+                    "total_bonuses",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("SUM", this.db.repo.Bonus.sequelize.col("amount")),
+                    "total_amount",
+                ],
+                [
+                    this.db.repo.Bonus.sequelize.fn("AVG", this.db.repo.Bonus.sequelize.col("amount")),
+                    "avg_amount",
+                ],
             ],
             include: [
                 {
                     model: this.db.repo.Consultant,
-                    attributes: ['first_name', 'last_name', 'email', 'level'],
+                    attributes: ["first_name", "last_name", "email", "level"],
                 },
             ],
-            group: ['user_id', 'user.id'],
-            order: [[this.db.repo.Bonus.sequelize.fn('SUM', this.db.repo.Bonus.sequelize.col('amount')), 'DESC']],
+            group: ["user_id", "user.id"],
+            order: [
+                [
+                    this.db.repo.Bonus.sequelize.fn("SUM", this.db.repo.Bonus.sequelize.col("amount")),
+                    "DESC",
+                ],
+            ],
             limit,
         });
-        return earners.map(earner => {
+        return earners.map((earner) => {
             const data = earner.get();
             return {
                 user_id: data.user_id,
@@ -402,7 +490,7 @@ let BonusesService = class BonusesService {
     async getTeamBonusPerformance(userId) {
         const directDownlines = await this.db.repo.Consultant.findAll({
             where: { sponsor_id: userId },
-            attributes: ['id', 'first_name', 'last_name', 'email', 'level'],
+            attributes: ["id", "first_name", "last_name", "email", "level"],
         });
         const teamPerformance = [];
         for (const downline of directDownlines) {
@@ -424,6 +512,46 @@ let BonusesService = class BonusesService {
                 total_amount: teamPerformance.reduce((sum, member) => sum + member.total_amount, 0),
             },
         };
+    }
+    async findAll(params, user) {
+        let pagination = (0, helpers_1.getPaginationOptions)(params);
+        let where = {};
+        let studentWhere = {};
+        if (!_.isEmpty(params.studentName)) {
+            studentWhere[sequelize_1.Op.and] = {
+                studentName: { [sequelize_1.Op.iLike]: `%${params.studentName.trim()}%` },
+            };
+        }
+        if (params?.admissionNumber) {
+            where.admissionNumber = params.admissionNumber;
+        }
+        if (params?.admissionType) {
+            where.admissionType = params.admissionType;
+        }
+        if (params?.consultantId) {
+            where.consultantId = params.consultantId;
+        }
+        try {
+            const bonus = await this.db.repo.Bonus.findAndCountAll({
+                where,
+                include: [
+                    { model: this.db.repo.Consultant, as: 'fkConsultant' },
+                    { model: this.db.repo.Consultant, as: 'fkFromConsultant' },
+                    {
+                        model: this.db.repo.Admission,
+                        include: [{
+                                model: this.db.repo.Student,
+                                where: studentWhere
+                            }],
+                        as: "admission",
+                    },
+                ],
+            });
+            return bonus;
+        }
+        catch (error) {
+            throw new common_1.BadRequestException((0, helpers_1.getErrorMessage)(error));
+        }
     }
 };
 exports.BonusesService = BonusesService;

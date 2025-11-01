@@ -3,6 +3,8 @@ import { Students } from '@/modules/students/student.entity';
 import { DependOn } from '../depend-on/depend-on.entity';
 import { Admissions } from '../admissions/admissions.entity';
 import { Banks } from '../bank/bank.entity';
+import { Bonus } from '../bonuses/bonuses.entity';
+import { Transactions } from '../transactions/transactions.entity';
 export declare const globalDbPRovider: ({
     provide: string;
     useValue: typeof Consultant;
@@ -18,4 +20,10 @@ export declare const globalDbPRovider: ({
 } | {
     provide: string;
     useValue: typeof Banks;
+} | {
+    provide: string;
+    useValue: typeof Bonus;
+} | {
+    provide: string;
+    useValue: typeof Transactions;
 })[];

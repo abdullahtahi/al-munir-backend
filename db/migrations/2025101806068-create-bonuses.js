@@ -9,25 +9,18 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
       },
-      userId: {
+      consultantId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'Consultant',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        field: 'fkConsultantId',
+        allowNull: true,
+        comment: 'Foreign key from Consultant table',
       },
-      fromUserId: {
+      fromConsultantId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'Consultant',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        field: 'fkFromConsultantId',
+        allowNull: true,
+        comment: 'Foreign key from Consultant table',
+      
       },
       bonusType: {
         type: Sequelize.ENUM(
@@ -42,24 +35,26 @@ module.exports = {
         allowNull: false,
       },
       amount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.STRING,
         allowNull: false,
       },
       percentage: {
-        type: Sequelize.DECIMAL(5, 2),
+        type: Sequelize.STRING,
         allowNull: true,
       },
       baseAmount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.STRING,
         allowNull: false,
       },
       levelDepth: {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
-      referenceId: {
-        type: Sequelize.UUID,
+      fkAdmissionId: {
+        type: Sequelize.INTEGER,
+        field: 'fkAdmissionId',
         allowNull: true,
+        comment: 'Foreign key from Admission table',
       },
       referenceType: {
         type: Sequelize.STRING(50),
@@ -97,6 +92,41 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.NOW,
       },
+    });
+    await queryInterface.addConstraint('Bonuses', {
+      fields: ['fkConsultantId'],
+      type: 'foreign key',
+      name: 'bonuses_fk1',
+      references: {
+        table: 'Consultant',
+        field: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    });
+
+    await queryInterface.addConstraint('Bonuses', {
+      fields: ['fkFromConsultantId'],
+      type: 'foreign key',
+      name: 'bonuses_fk2',
+      references: {
+        table: 'Consultant',
+        field: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    });
+    
+    await queryInterface.addConstraint('Bonuses', {
+      fields: ['fkAdmissionId'],
+      type: 'foreign key',
+      name: 'bonuses_fk3',
+      references: {
+        table: 'Admissions',
+        field: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     });
   },
 

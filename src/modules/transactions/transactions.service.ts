@@ -14,7 +14,6 @@ export class TransactionsService {
     private readonly db: GlobalDbService,
     @Inject(SEQUELIZE)
     private readonly sequelize: Sequelize,
-    private transactionService: TransactionsService,
     private ConsultantService: ConsultantService,
   ) { }
 

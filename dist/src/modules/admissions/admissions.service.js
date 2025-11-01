@@ -81,13 +81,13 @@ let AdmissionsService = class AdmissionsService {
                     admissionNumber: createAdmissionDto.admissionNumber,
                     status: createAdmissionDto.status,
                 }, { include: [{ model: this.db.repo.Consultant }], transaction });
-                if (createAdmissionDto?.consultantId) {
-                    const consultant = await this.consultantService.findById(createAdmissionDto.consultantId);
+                if (createAdmissionDto?.sponsorId) {
+                    const consultant = await this.consultantService.findById(createAdmissionDto.sponsorId);
                     if (consultant?.level) {
-                        await this.consultantService.updateAdmissionCounts(createAdmissionDto.consultantId, createAdmissionDto.admissionType);
+                        await this.consultantService.updateAdmissionCounts(createAdmissionDto.sponsorId, createAdmissionDto.admissionType);
                     }
                     if (admission?.id) {
-                        await this.bonusesService.calculateAndDistributeBonuses(admission.id);
+                        await this.bonusesService.calculateAndDistributeBonuses(admission, transaction);
                     }
                 }
                 return { message: "Admission created successfully", admission };

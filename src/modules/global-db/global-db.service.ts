@@ -8,8 +8,10 @@ import * as _ from 'lodash';
 import {
   ADMISSION_REPOSITORY,
   BANK_REPOSITORY,
+  BONUS_REPOSITORY,
   DEPENDON_REPOSITORY,
   STUDENT_REPOSITORY,
+  TRANSACTION_REPOSITORY,
   USER_REPOSITORY
 } from 'src/constants/repositories';
 import { Consultant } from '../consultant/consultant.entity';
@@ -17,6 +19,8 @@ import { Students } from '@/modules/students/student.entity';
 import { Admissions } from '../admissions/admissions.entity';
 import { DependOn } from '../depend-on/depend-on.entity';
 import { Banks } from '../bank/bank.entity';
+import { Bonus } from '../bonuses/bonuses.entity';
+import { Transactions } from '../transactions/transactions.entity';
 
 
 @Injectable()
@@ -35,6 +39,10 @@ export class GlobalDbService {
     private readonly dependOnRepository: typeof DependOn,
     @Inject(BANK_REPOSITORY)
     private readonly bankRepository: typeof Banks,
+    @Inject(BONUS_REPOSITORY)
+    private readonly bonusRepository: typeof Bonus,
+    @Inject(TRANSACTION_REPOSITORY)
+    private readonly transactionsRepository: typeof Transactions,
 
 
 
@@ -44,6 +52,8 @@ export class GlobalDbService {
     this.repo.Admission = this.admissionRepository;
     this.repo.DependOn = this.dependOnRepository;
     this.repo.Bank = this.bankRepository;
+    this.repo.Bonus = this.bonusRepository;
+    this.repo.Transactions = this.transactionsRepository;
   }
 
   async getOne(model: string, params: any) {

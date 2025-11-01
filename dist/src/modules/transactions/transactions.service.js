@@ -20,10 +20,9 @@ const global_db_service_1 = require("../global-db/global-db.service");
 const constants_1 = require("../../constants");
 const consultant_service_1 = require("../consultant/consultant.service");
 let TransactionsService = class TransactionsService {
-    constructor(db, sequelize, transactionService, ConsultantService) {
+    constructor(db, sequelize, ConsultantService) {
         this.db = db;
         this.sequelize = sequelize;
-        this.transactionService = transactionService;
         this.ConsultantService = ConsultantService;
     }
     async create(userId, createTransactionDto) {
@@ -295,7 +294,6 @@ exports.TransactionsService = TransactionsService = __decorate([
     __param(1, (0, common_1.Inject)(constants_1.SEQUELIZE)),
     __metadata("design:paramtypes", [global_db_service_1.GlobalDbService,
         sequelize_1.Sequelize,
-        TransactionsService,
         consultant_service_1.ConsultantService])
 ], TransactionsService);
 //# sourceMappingURL=transactions.service.js.map

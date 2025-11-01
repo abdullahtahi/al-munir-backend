@@ -17,12 +17,14 @@ const common_1 = require("@nestjs/common");
 const _ = require("lodash");
 const repositories_1 = require("../../constants/repositories");
 let GlobalDbService = class GlobalDbService {
-    constructor(userRepository, studentRepository, admissionRepository, dependOnRepository, bankRepository) {
+    constructor(userRepository, studentRepository, admissionRepository, dependOnRepository, bankRepository, bonusRepository, transactionsRepository) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.admissionRepository = admissionRepository;
         this.dependOnRepository = dependOnRepository;
         this.bankRepository = bankRepository;
+        this.bonusRepository = bonusRepository;
+        this.transactionsRepository = transactionsRepository;
         this.logger = new common_1.Logger('GlobalDbService');
         this.repo = {};
         this.repo.Consultant = this.userRepository;
@@ -30,6 +32,8 @@ let GlobalDbService = class GlobalDbService {
         this.repo.Admission = this.admissionRepository;
         this.repo.DependOn = this.dependOnRepository;
         this.repo.Bank = this.bankRepository;
+        this.repo.Bonus = this.bonusRepository;
+        this.repo.Transactions = this.transactionsRepository;
     }
     async getOne(model, params) {
         try {
@@ -89,6 +93,8 @@ exports.GlobalDbService = GlobalDbService = __decorate([
     __param(2, (0, common_1.Inject)(repositories_1.ADMISSION_REPOSITORY)),
     __param(3, (0, common_1.Inject)(repositories_1.DEPENDON_REPOSITORY)),
     __param(4, (0, common_1.Inject)(repositories_1.BANK_REPOSITORY)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
+    __param(5, (0, common_1.Inject)(repositories_1.BONUS_REPOSITORY)),
+    __param(6, (0, common_1.Inject)(repositories_1.TRANSACTION_REPOSITORY)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object])
 ], GlobalDbService);
 //# sourceMappingURL=global-db.service.js.map

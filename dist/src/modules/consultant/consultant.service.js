@@ -312,17 +312,15 @@ let ConsultantService = class ConsultantService {
         }
         await user.update(updateData);
     }
-    async updateBalance(userId, amount, transaction) {
-        const user = await this.findById(userId);
-        if (!user) {
-            throw new common_1.NotFoundException("User not found");
-        }
+    async updateBalance(user, amount, transaction) {
         const newTotalEarnings = parseFloat(user.totalEarnings.toString()) + amount;
         const newAvailableBalance = parseFloat(user.availableBalance.toString()) + amount;
-        await user.update({
-            total_earnings: newTotalEarnings,
-            available_balance: newAvailableBalance,
-        }, { transaction });
+        await this.db.repo.Consultant.update({
+            totalEarnings: newTotalEarnings,
+            availableBalance: newAvailableBalance,
+        }, { where: {
+                id: user.id
+            } }, { transaction });
     }
     async remove(id) {
         const user = await this.findById(id);

@@ -62,6 +62,9 @@ let BonusesController = class BonusesController {
         const performance = await this.bonusesService.getTeamBonusPerformance(userId);
         return pagination_dto_1.ResponseDto.success(performance, 'Team performance retrieved successfully');
     }
+    async findAll(params, user) {
+        return await this.bonusesService.findAll(params, user);
+    }
 };
 exports.BonusesController = BonusesController;
 __decorate([
@@ -152,6 +155,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], BonusesController.prototype, "getTeamPerformance", null);
+__decorate([
+    (0, common_1.Get)(''),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], BonusesController.prototype, "findAll", null);
 exports.BonusesController = BonusesController = __decorate([
     (0, swagger_1.ApiTags)('Bonuses'),
     (0, swagger_1.ApiBearerAuth)(),

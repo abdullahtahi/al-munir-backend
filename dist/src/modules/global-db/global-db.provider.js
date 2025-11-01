@@ -7,6 +7,8 @@ const student_entity_1 = require("../students/student.entity");
 const depend_on_entity_1 = require("../depend-on/depend-on.entity");
 const admissions_entity_1 = require("../admissions/admissions.entity");
 const bank_entity_1 = require("../bank/bank.entity");
+const bonuses_entity_1 = require("../bonuses/bonuses.entity");
+const transactions_entity_1 = require("../transactions/transactions.entity");
 exports.globalDbPRovider = [
     {
         provide: repositories_1.USER_REPOSITORY,
@@ -27,6 +29,14 @@ exports.globalDbPRovider = [
     {
         provide: repositories_1.BANK_REPOSITORY,
         useValue: bank_entity_1.Banks,
+    },
+    {
+        provide: repositories_1.BONUS_REPOSITORY,
+        useValue: bonuses_entity_1.Bonus,
+    },
+    {
+        provide: repositories_1.TRANSACTION_REPOSITORY,
+        useValue: transactions_entity_1.Transactions,
     },
 ];
 //# sourceMappingURL=global-db.provider.js.map

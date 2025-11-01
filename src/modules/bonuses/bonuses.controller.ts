@@ -117,4 +117,11 @@ export class BonusesController {
     const performance = await this.bonusesService.getTeamBonusPerformance(userId);
     return ResponseDto.success(performance, 'Team performance retrieved successfully');
   }
+  @Get('')
+  async findAll(
+    @Query() params: any,
+    @CurrentUser() user: CurrentUserInfo,
+  ) {
+return await this.bonusesService.findAll(params,user)
+  }
 }

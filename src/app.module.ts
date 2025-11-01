@@ -12,6 +12,8 @@ import { StudentsModule } from './modules/students/students.module';
 import { DependOnModule } from './modules/depend-on/depend-on.module';
 import { BankModule } from './modules/bank/bank.module';
 import { AdmissionsModule } from './modules/admissions/admissions.module';
+import { BonusesModule } from './modules/bonuses/bonuses.module';
+import { TransactionsModule } from './modules/transactions/transactions.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { AdmissionsModule } from './modules/admissions/admissions.module';
     StudentsModule,
     DependOnModule,
     BankModule,
+    BonusesModule,
+    TransactionsModule
   ],
   providers: [],
 })

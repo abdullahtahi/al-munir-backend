@@ -82,17 +82,17 @@ export class AdmissionsService {
           status: createAdmissionDto.status,
         }, { include: [{ model: this.db.repo.Consultant }], transaction });
 
-        if (createAdmissionDto?.consultantId) {
-          const consultant = await this.consultantService.findById(createAdmissionDto.consultantId);
+        if (createAdmissionDto?.sponsorId) {
+          const consultant = await this.consultantService.findById(createAdmissionDto.sponsorId);
           if (consultant?.level) {
             await this.consultantService.updateAdmissionCounts(
-              createAdmissionDto.consultantId,
+              createAdmissionDto.sponsorId,
               createAdmissionDto.admissionType
             );
           }
 
           if (admission?.id) {
-            await this.bonusesService.calculateAndDistributeBonuses(admission.id);
+            await this.bonusesService.calculateAndDistributeBonuses(admission,transaction);
           }
         }
 

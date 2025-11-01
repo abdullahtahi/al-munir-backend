@@ -68,9 +68,8 @@ export class AuthController {
     return ResponseDto.success(null, 'Password reset successfully');
   }
 
-  @Post('logout')
+  @Get('logout')
   async logout() {
-    // In a more sophisticated system, you might want to blacklist the token
     return ResponseDto.success(null, 'Logged out successfully');
   }
 }

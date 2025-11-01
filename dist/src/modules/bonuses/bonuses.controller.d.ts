@@ -12,4 +12,5 @@ export declare class BonusesController {
     getMonthlyStats(year: number, userId?: string): Promise<ResponseDto<any>>;
     getTopEarners(limit?: number, period?: 'month' | 'year' | 'all'): Promise<ResponseDto<any>>;
     getTeamPerformance(userId: string, user: CurrentUserInfo): Promise<ResponseDto<any>>;
+    findAll(params: any, user: CurrentUserInfo): Promise<any>;
 }

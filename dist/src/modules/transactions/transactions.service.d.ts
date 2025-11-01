@@ -7,9 +7,8 @@ import { ConsultantService } from '../consultant/consultant.service';
 export declare class TransactionsService {
     private readonly db;
     private readonly sequelize;
-    private transactionService;
     private ConsultantService;
-    constructor(db: GlobalDbService, sequelize: Sequelize, transactionService: TransactionsService, ConsultantService: ConsultantService);
+    constructor(db: GlobalDbService, sequelize: Sequelize, ConsultantService: ConsultantService);
     create(userId: string, createTransactionDto: CreateTransactionDto): Promise<any>;
     findAll(paginationDto: PaginationDto, filterDto?: TransactionFilterDto): Promise<{
         transactions: any;

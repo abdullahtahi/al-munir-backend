@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { Op, Sequelize, Transaction } from "sequelize";
+import { Op, Sequelize, Transaction, where } from "sequelize";
 // import { User } from '../../database/models';
 import { PaginationDto } from "../../common/dto/pagination.dto";
 import {
@@ -408,24 +408,23 @@ export class ConsultantService {
   }
 
   async updateBalance(
-    userId: number,
+    user: any,
     amount: number,
     transaction?: Transaction
   ): Promise<void> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
 
     const newTotalEarnings = parseFloat(user.totalEarnings.toString()) + amount;
     const newAvailableBalance =
       parseFloat(user.availableBalance.toString()) + amount;
 
-    await user.update(
+    await this.db.repo.Consultant.update(
       {
-        total_earnings: newTotalEarnings,
-        available_balance: newAvailableBalance,
+        totalEarnings: newTotalEarnings,
+        availableBalance: newAvailableBalance,
       },
+{      where:{
+        id:user.id
+      }},
       { transaction }
     );
   }

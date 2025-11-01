@@ -14,9 +14,9 @@ import {
 import * as bcrypt from 'bcrypt';
 import { UserLevel, UserRole, ConsultantStatus } from '@/common/enums';
 import { Banks } from '../bank/bank.entity';
+import { Bonus } from '../bonuses/bonuses.entity';
 // import { UserRole, UserLevel, Consultanttatus } from '../../common/enums';
 // import { Admission } from './admission.model';
-// import { Bonus } from './bonus.model';
 // import { Incentive } from './incentive.model';
 // import { Transaction } from './transaction.model';
 
@@ -208,9 +208,6 @@ export class Consultant extends Model {
 
   // @HasMany(() => Admission)
   // admissions: Admission[];
-
-  // @HasMany(() => Bonus)
-  // bonuses: Bonus[];
 
   // @HasMany(() a=> Incentive)
   // incentives: Incentive[];

@@ -29,6 +29,6 @@ export declare class ConsultantService {
         total: any;
     }>;
     updateAdmissionCounts(userId: number, admissionType: AdmissionType): Promise<void>;
-    updateBalance(userId: number, amount: number, transaction?: Transaction): Promise<void>;
+    updateBalance(user: any, amount: number, transaction?: Transaction): Promise<void>;
     remove(id: number): Promise<void>;
 }
