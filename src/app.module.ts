@@ -14,6 +14,9 @@ import { BankModule } from './modules/bank/bank.module';
 import { AdmissionsModule } from './modules/admissions/admissions.module';
 import { BonusesModule } from './modules/bonuses/bonuses.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
+import { BranchesModule } from './modules/branches/branches.module';
+import { WebsiteSettingModule } from './modules/website-setting/website-setting.module';
+import { CoursesModule } from './modules/courses/courses.module';
 
 @Module({
   imports: [
@@ -31,7 +34,10 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
     DependOnModule,
     BankModule,
     BonusesModule,
-    TransactionsModule
+    TransactionsModule,
+    BranchesModule,
+    WebsiteSettingModule,
+    CoursesModule,
   ],
   providers: [],
 })

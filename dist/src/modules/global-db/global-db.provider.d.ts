@@ -5,6 +5,8 @@ import { Admissions } from '../admissions/admissions.entity';
 import { Banks } from '../bank/bank.entity';
 import { Bonus } from '../bonuses/bonuses.entity';
 import { Transactions } from '../transactions/transactions.entity';
+import { Courses } from '@/modules/courses/entities/course.entity';
+import { WebsiteSetting } from '../website-setting/entities/website-setting.entity';
 export declare const globalDbPRovider: ({
     provide: string;
     useValue: typeof Consultant;
@@ -26,4 +28,10 @@ export declare const globalDbPRovider: ({
 } | {
     provide: string;
     useValue: typeof Transactions;
+} | {
+    provide: string;
+    useValue: typeof Courses;
+} | {
+    provide: string;
+    useValue: typeof WebsiteSetting;
 })[];

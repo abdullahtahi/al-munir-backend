@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const _ = require("lodash");
 const repositories_1 = require("../../constants/repositories");
 let GlobalDbService = class GlobalDbService {
-    constructor(userRepository, studentRepository, admissionRepository, dependOnRepository, bankRepository, bonusRepository, transactionsRepository) {
+    constructor(userRepository, studentRepository, admissionRepository, dependOnRepository, bankRepository, bonusRepository, transactionsRepository, branchRepository, coursesRepository, websiteSettingRepository) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.admissionRepository = admissionRepository;
@@ -25,6 +25,9 @@ let GlobalDbService = class GlobalDbService {
         this.bankRepository = bankRepository;
         this.bonusRepository = bonusRepository;
         this.transactionsRepository = transactionsRepository;
+        this.branchRepository = branchRepository;
+        this.coursesRepository = coursesRepository;
+        this.websiteSettingRepository = websiteSettingRepository;
         this.logger = new common_1.Logger('GlobalDbService');
         this.repo = {};
         this.repo.Consultant = this.userRepository;
@@ -34,6 +37,9 @@ let GlobalDbService = class GlobalDbService {
         this.repo.Bank = this.bankRepository;
         this.repo.Bonus = this.bonusRepository;
         this.repo.Transactions = this.transactionsRepository;
+        this.repo.Branch = this.branchRepository;
+        this.repo.Course = this.coursesRepository;
+        this.repo.WebsiteSetting = this.websiteSettingRepository;
     }
     async getOne(model, params) {
         try {
@@ -95,6 +101,9 @@ exports.GlobalDbService = GlobalDbService = __decorate([
     __param(4, (0, common_1.Inject)(repositories_1.BANK_REPOSITORY)),
     __param(5, (0, common_1.Inject)(repositories_1.BONUS_REPOSITORY)),
     __param(6, (0, common_1.Inject)(repositories_1.TRANSACTION_REPOSITORY)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object])
+    __param(7, (0, common_1.Inject)(repositories_1.BRANCHS_REPOSITORY)),
+    __param(8, (0, common_1.Inject)(repositories_1.COURSES_REPOSITORY)),
+    __param(9, (0, common_1.Inject)(repositories_1.WEBSITE_SETTING_REPOSITORY)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object, Object, Object, Object])
 ], GlobalDbService);
 //# sourceMappingURL=global-db.service.js.map

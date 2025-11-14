@@ -9,6 +9,9 @@ const admissions_entity_1 = require("../admissions/admissions.entity");
 const bank_entity_1 = require("../bank/bank.entity");
 const bonuses_entity_1 = require("../bonuses/bonuses.entity");
 const transactions_entity_1 = require("../transactions/transactions.entity");
+const branch_entity_1 = require("../branches/entities/branch.entity");
+const course_entity_1 = require("../courses/entities/course.entity");
+const website_setting_entity_1 = require("../website-setting/entities/website-setting.entity");
 exports.globalDbPRovider = [
     {
         provide: repositories_1.USER_REPOSITORY,
@@ -37,6 +40,22 @@ exports.globalDbPRovider = [
     {
         provide: repositories_1.TRANSACTION_REPOSITORY,
         useValue: transactions_entity_1.Transactions,
+    },
+    {
+        provide: repositories_1.BRANCHS_REPOSITORY,
+        useValue: branch_entity_1.Branches,
+    },
+    {
+        provide: repositories_1.COURSES_REPOSITORY,
+        useValue: course_entity_1.Courses,
+    },
+    {
+        provide: repositories_1.COURSES_REPOSITORY,
+        useValue: course_entity_1.Courses,
+    },
+    {
+        provide: repositories_1.WEBSITE_SETTING_REPOSITORY,
+        useValue: website_setting_entity_1.WebsiteSetting,
     },
 ];
 //# sourceMappingURL=global-db.provider.js.map

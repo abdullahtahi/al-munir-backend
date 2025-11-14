@@ -9,10 +9,13 @@ import {
   ADMISSION_REPOSITORY,
   BANK_REPOSITORY,
   BONUS_REPOSITORY,
+  BRANCHS_REPOSITORY,
+  COURSES_REPOSITORY,
   DEPENDON_REPOSITORY,
   STUDENT_REPOSITORY,
   TRANSACTION_REPOSITORY,
-  USER_REPOSITORY
+  USER_REPOSITORY,
+  WEBSITE_SETTING_REPOSITORY
 } from 'src/constants/repositories';
 import { Consultant } from '../consultant/consultant.entity';
 import { Students } from '@/modules/students/student.entity';
@@ -21,6 +24,9 @@ import { DependOn } from '../depend-on/depend-on.entity';
 import { Banks } from '../bank/bank.entity';
 import { Bonus } from '../bonuses/bonuses.entity';
 import { Transactions } from '../transactions/transactions.entity';
+import { Branches } from '@/modules/branches/entities/branch.entity';
+import { Courses } from '@/modules/courses/entities/course.entity';
+import { WebsiteSetting } from '../website-setting/entities/website-setting.entity';
 
 
 @Injectable()
@@ -43,6 +49,12 @@ export class GlobalDbService {
     private readonly bonusRepository: typeof Bonus,
     @Inject(TRANSACTION_REPOSITORY)
     private readonly transactionsRepository: typeof Transactions,
+    @Inject(BRANCHS_REPOSITORY)
+    private readonly branchRepository: typeof Branches,
+    @Inject(COURSES_REPOSITORY)
+    private readonly coursesRepository: typeof Courses,
+    @Inject(WEBSITE_SETTING_REPOSITORY)
+    private readonly websiteSettingRepository: typeof WebsiteSetting,
 
 
 
@@ -54,6 +66,9 @@ export class GlobalDbService {
     this.repo.Bank = this.bankRepository;
     this.repo.Bonus = this.bonusRepository;
     this.repo.Transactions = this.transactionsRepository;
+    this.repo.Branch = this.branchRepository;
+    this.repo.Course = this.coursesRepository;
+    this.repo.WebsiteSetting = this.websiteSettingRepository;
   }
 
   async getOne(model: string, params: any) {

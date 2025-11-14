@@ -4,4 +4,7 @@ import { DependOn } from '@/modules/depend-on/depend-on.entity';
 import { Admissions } from '@/modules/admissions/admissions.entity';
 import { Banks } from '@/modules/bank/bank.entity';
 import { Bonus } from '@/modules/bonuses/bonuses.entity';
-export declare const models: (typeof Bonus | typeof Consultant | typeof Admissions | typeof Students | typeof DependOn | typeof Banks)[];
+import { Transactions } from '@/modules/transactions/transactions.entity';
+import { Courses } from '@/modules/courses/entities/course.entity';
+import { WebsiteSetting } from '@/modules/website-setting/entities/website-setting.entity';
+export declare const models: (typeof WebsiteSetting | typeof Consultant | typeof Admissions | typeof Students | typeof DependOn | typeof Banks | typeof Bonus | typeof Transactions | typeof Courses)[];

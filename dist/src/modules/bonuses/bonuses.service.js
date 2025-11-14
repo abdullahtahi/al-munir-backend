@@ -34,7 +34,7 @@ let BonusesService = class BonusesService {
             await this.calculateGlobalBonuses(admission, transaction);
         }
         catch (error) {
-            console.error("Bonus calculation error:", error);
+            console.error("Bonus calculation error: 1122", error);
             throw error;
         }
     }
@@ -516,20 +516,22 @@ let BonusesService = class BonusesService {
     async findAll(params, user) {
         let pagination = (0, helpers_1.getPaginationOptions)(params);
         let where = {};
+        let admissionWhere = {};
         let studentWhere = {};
+        let userWhere = {};
         if (!_.isEmpty(params.studentName)) {
             studentWhere[sequelize_1.Op.and] = {
                 studentName: { [sequelize_1.Op.iLike]: `%${params.studentName.trim()}%` },
             };
         }
         if (params?.admissionNumber) {
-            where.admissionNumber = params.admissionNumber;
+            admissionWhere.admissionNumber = params.admissionNumber;
         }
         if (params?.admissionType) {
-            where.admissionType = params.admissionType;
+            admissionWhere.admissionType = params.admissionType;
         }
         if (params?.consultantId) {
-            where.consultantId = params.consultantId;
+            userWhere.id = params.consultantId;
         }
         try {
             const bonus = await this.db.repo.Bonus.findAndCountAll({
@@ -539,17 +541,26 @@ let BonusesService = class BonusesService {
                     { model: this.db.repo.Consultant, as: 'fkFromConsultant' },
                     {
                         model: this.db.repo.Admission,
+                        required: true,
+                        where: admissionWhere,
                         include: [{
                                 model: this.db.repo.Student,
                                 where: studentWhere
                             }],
                         as: "admission",
                     },
+                    {
+                        model: this.db.repo.Consultant,
+                        required: true,
+                        as: "fkConsultant",
+                        where: userWhere,
+                    },
                 ],
             });
             return bonus;
         }
         catch (error) {
+            console.log("error", error);
             throw new common_1.BadRequestException((0, helpers_1.getErrorMessage)(error));
         }
     }

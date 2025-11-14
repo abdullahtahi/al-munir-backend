@@ -20,6 +20,9 @@ const bank_module_1 = require("./modules/bank/bank.module");
 const admissions_module_1 = require("./modules/admissions/admissions.module");
 const bonuses_module_1 = require("./modules/bonuses/bonuses.module");
 const transactions_module_1 = require("./modules/transactions/transactions.module");
+const branches_module_1 = require("./modules/branches/branches.module");
+const website_setting_module_1 = require("./modules/website-setting/website-setting.module");
+const courses_module_1 = require("./modules/courses/courses.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,7 +43,10 @@ exports.AppModule = AppModule = __decorate([
             depend_on_module_1.DependOnModule,
             bank_module_1.BankModule,
             bonuses_module_1.BonusesModule,
-            transactions_module_1.TransactionsModule
+            transactions_module_1.TransactionsModule,
+            branches_module_1.BranchesModule,
+            website_setting_module_1.WebsiteSettingModule,
+            courses_module_1.CoursesModule,
         ],
         providers: [],
     })

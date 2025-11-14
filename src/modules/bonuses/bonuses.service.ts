@@ -34,7 +34,7 @@ export class BonusesService {
 
       // Transaction commit/rollback is handled by parent service (admissions.service.ts)
     } catch (error) {
-      console.error("Bonus calculation error:", error);
+      console.error("Bonus calculation error: 1122", error);
       throw error;
     }
   }
@@ -729,7 +729,9 @@ export class BonusesService {
   async findAll(params, user) {
     let pagination = getPaginationOptions(params);
     let where: any = {};
+    let admissionWhere: any = {};
     let studentWhere: any = {};
+    let userWhere: any = {};
     if (!_.isEmpty(params.studentName)) {
       studentWhere[Op.and] = {
         studentName: { [Op.iLike]: `%${params.studentName.trim()}%` },
@@ -737,13 +739,13 @@ export class BonusesService {
     }
 
     if (params?.admissionNumber) {
-      where.admissionNumber = params.admissionNumber;
+      admissionWhere.admissionNumber = params.admissionNumber;
     }
     if (params?.admissionType) {
-      where.admissionType = params.admissionType;
+      admissionWhere.admissionType = params.admissionType;
     }
     if (params?.consultantId) {
-      where.consultantId = params.consultantId;
+      userWhere.id = params.consultantId;
     }
     try {
       const bonus = await this.db.repo.Bonus.findAndCountAll({
@@ -753,17 +755,26 @@ export class BonusesService {
             { model: this.db.repo.Consultant, as: 'fkFromConsultant' },
           {
             model: this.db.repo.Admission,
+            required:true,
+            where:admissionWhere,
             include:[  {
                 model: this.db.repo.Student,
                 where:studentWhere
               }],
             as:"admission",
-            // where: studentWhere,
+          },
+          {
+            model: this.db.repo.Consultant,
+            required:true,
+            as:"fkConsultant",
+            where:userWhere,         
           },
         ],
       });
       return bonus;
     } catch (error) {
+      console.log("error",error);
+
       throw new BadRequestException(getErrorMessage(error));
     }
   }
