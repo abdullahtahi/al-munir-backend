@@ -10,4 +10,8 @@ export declare class WebsiteSetting extends Model {
     facebookLink: string;
     youtubeLink: string;
     email: string;
+    sucessStories: string;
+    trustedTutors: string;
+    schedule: string;
+    courses: string;
 }

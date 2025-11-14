@@ -55,6 +55,22 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
     __metadata("design:type", String)
 ], WebsiteSetting.prototype, "email", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
+    __metadata("design:type", String)
+], WebsiteSetting.prototype, "sucessStories", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
+    __metadata("design:type", String)
+], WebsiteSetting.prototype, "trustedTutors", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
+    __metadata("design:type", String)
+], WebsiteSetting.prototype, "schedule", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.STRING),
+    __metadata("design:type", String)
+], WebsiteSetting.prototype, "courses", void 0);
 exports.WebsiteSetting = WebsiteSetting = __decorate([
     (0, sequelize_typescript_1.Table)({
         tableName: 'WebsiteSetting',

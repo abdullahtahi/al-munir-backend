@@ -37,6 +37,22 @@ module.exports = {
         type:Sequelize.STRING,
         allowNull: true,
       },
+      sucessStories:{
+        type:Sequelize.STRING,
+        allowNull: true,
+      },
+      trustedTutors:{
+        type:Sequelize.STRING,
+        allowNull: true,
+      },
+      schedule:{
+        type:Sequelize.STRING,
+        allowNull: true,
+      },
+      courses:{
+        type:Sequelize.STRING,
+        allowNull: true,
+      },
 
     });
   },

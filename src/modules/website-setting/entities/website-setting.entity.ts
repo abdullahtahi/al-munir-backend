@@ -46,5 +46,17 @@ export class WebsiteSetting extends Model {
   @Column(DataType.STRING)
   email: string;
 
+  @Column(DataType.STRING)
+  sucessStories: string;
+
+  @Column(DataType.STRING)
+  trustedTutors: string;
+
+  @Column(DataType.STRING)
+  schedule: string;
+  
+  @Column(DataType.STRING)
+  courses: string;
+
 }
 
