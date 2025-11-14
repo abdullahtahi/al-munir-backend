@@ -10,7 +10,7 @@ module.exports = {
         autoIncrement: true,
       },
       vision: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(1000),
         allowNull: false,
       },
       address: {

@@ -14,7 +14,7 @@ async function bootstrap() {
         forbidNonWhitelisted: true,
     }));
     app.enableCors({
-        origin: configService.get('CORS_ORIGIN'),
+        origin: true,
         credentials: true,
     });
     const apiPrefix = configService.get('API_PREFIX', 'api/v1');

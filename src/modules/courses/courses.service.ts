@@ -23,6 +23,7 @@ export class CoursesService {
 
   findAll(params) {
     try {
+      console.log("line 26",params)
       let pagination = getPaginationOptions(params);
       const where: any = {};
       if (params?.name) {
@@ -33,11 +34,13 @@ export class CoursesService {
       if (params?.isActive) {
         where.isActive = params.isActive == "Active" ? true : false;
       }
+      console.log("line 37",where)
       return this.db.repo.Course.findAndCountAll({
         where,
         ...pagination,
       });
     } catch (error) {
+      console.log("working",error)
       throw new BadRequestException(getErrorMessage(error));
     }
   }
