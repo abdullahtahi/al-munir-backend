@@ -225,6 +225,7 @@ module.exports = {
         lastName: 'Admin',
         email: 'superadmin@gmail.com',
         password: password,
+        phone: '03001234567',
         cnic: '123',
         dateOfBirth: new Date(),
         role: 'super_admin',

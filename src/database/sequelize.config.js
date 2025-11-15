@@ -2,14 +2,22 @@ require('dotenv').config();
 const env = process.env.NODE_ENV || 'development';
 
 module.exports = {
-  [env]: {
-    username: process.env.DB_USERNAME,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
-    host: process.env.DATABASE_HOST,
-    port: process.env.DATABASE_PORT,
-    dialect: process.env.DB_DIALECT,
-    client: process.env.DB_CLIENT,
+  development: {
+    username: process.env.DB_USERNAME || process.env.DATABASE_USER || 'postgres',
+    password: process.env.DATABASE_PASSWORD || 'root',
+    database: process.env.DATABASE_NAME || 'al_munir',
+    host: process.env.DATABASE_HOST || 'localhost',
+    port: process.env.DATABASE_PORT || 5432,
+    dialect: process.env.DB_DIALECT || 'postgres',
+    logging: false,
+  },
+  production: {
+    username: process.env.DB_USERNAME || process.env.DATABASE_USER || 'postgres',
+    password: process.env.DATABASE_PASSWORD || 'root',
+    database: process.env.DATABASE_NAME || 'al_munir',
+    host: process.env.DATABASE_HOST || 'postgres',
+    port: process.env.DATABASE_PORT || 5432,
+    dialect: process.env.DB_DIALECT || 'postgres',
     logging: false,
   },
 };
