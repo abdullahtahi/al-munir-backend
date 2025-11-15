@@ -4,7 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { ThrottlerModule } from '@nestjs/throttler';
 // Modules
 import { AuthModule } from './modules/auth/auth.module';
-import { ConsultantModule } from './modules/Consultant/Consultant.module';
+import { ConsultantModule } from './modules/consultant/consultant.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { DatabaseModule } from './database/database.module';
 import { GlobalDbModule } from './modules/global-db/global-db.module';
