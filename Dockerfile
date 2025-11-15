@@ -20,18 +20,27 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and postgresql-client for proper signal handling and wait-for-db
+RUN apk add --no-cache dumb-init postgresql-client
 
 # Copy package files
 COPY package.json yarn.lock ./
 
-# Install only production dependencies
-RUN yarn install --frozen-lockfile --production
+# Install dependencies (need dev dependencies for sequelize-cli)
+RUN yarn install --frozen-lockfile
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/models ./models
+
+# Copy database migrations and configuration
+COPY db ./db
+COPY src/database/sequelize.config.js ./src/database/
+COPY .sequelizerc ./
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose the port
 EXPOSE 3000
@@ -43,5 +52,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application - NestJS builds to dist/src/main.js
-CMD ["node", "dist/src/main"]
+# Start the application using the entrypoint script
+CMD ["docker-entrypoint.sh"]
