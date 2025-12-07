@@ -8,20 +8,20 @@ module.exports = {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        allowNull: false,
+        allowNull: true,
         autoIncrement: true,
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       relation: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       address: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       createdAt: { type: Sequelize.DATE },
       updatedAt: { type: Sequelize.DATE },

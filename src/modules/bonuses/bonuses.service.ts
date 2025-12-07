@@ -1,7 +1,8 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, forwardRef } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Op, Sequelize, Transaction } from "sequelize";
 import { BonusType, AdmissionType, TransactionType } from "../../common/enums";
+import { BonusStatus } from "./bonuses.entity";
 import { BONUS_RATES } from "../../common/constants";
 import { ConsultantService } from "../consultant/consultant.service";
 import { TransactionsService } from "../transactions/transactions.service";
@@ -14,7 +15,7 @@ import * as _ from "lodash";
 export class BonusesService {
   constructor(
     private readonly db: GlobalDbService,
-    @Inject(SEQUELIZE)
+    @Inject(forwardRef(() => ConsultantService))
     private consultantService: ConsultantService
   ) {}
 
@@ -372,15 +373,15 @@ export class BonusesService {
         // Create bonus record
         await this.db.repo.Bonus.create(
           {
-            user_id: userId,
-            from_user_id: userId,
-            bonus_type: BonusType.PROGRESSION,
-            amount: progressionBonus,
-            percentage: 5, // 5% progression bonus
-            base_amount: progressionBonus,
+            consultantId: Number(userId),
+            fromConsultantId: Number(userId),
+            bonusType: BonusType.PROGRESSION,
+            amount: progressionBonus.toString(),
+            percentage: "5", // 5% progression bonus
+            baseAmount: progressionBonus.toString(),
             description: `Progression bonus for advancing from Level ${oldLevel} to Level ${newLevel}`,
-            status: "completed",
-            processed_at: new Date(),
+            status: BonusStatus.COMPLETED,
+            processedAt: new Date(),
           },
           { transaction }
         );
@@ -393,16 +394,16 @@ export class BonusesService {
         );
 
         // Create transaction record
-        await this.db.repo.transaction.create(
+        await this.db.repo.Transactions.create(
           {
-            user_id: userId,
-            transaction_type: TransactionType.BONUS_CREDIT,
+            consultantId: Number(userId),
+            transactionType: TransactionType.BONUS_CREDIT,
             amount: progressionBonus,
-            net_amount: progressionBonus,
-            reference_type: "progression",
+            netAmount: progressionBonus,
+            referenceType: "progression",
             description: `Level progression bonus: ${oldLevel} → ${newLevel}`,
             status: "completed",
-            processed_at: new Date(),
+            processedAt: new Date(),
           },
           { transaction }
         );
@@ -421,13 +422,13 @@ export class BonusesService {
   ): number {
     // Define progression bonus amounts based on level advancement
     const bonusAmounts = {
-      "4_to_3": 5000,
-      "3_to_2": 10000,
-      "2_to_1": 15000,
-      "1_to_manager": 25000,
-      manager_to_senior: 35000,
-      senior_to_area: 50000,
-      area_to_sector: 75000,
+      "1_to_2": 5000,
+      "2_to_3": 10000,
+      "3_to_4": 15000,
+      "4_to_5": 25000, // Level 4 to Manager
+      "5_to_6": 35000, // Manager to Senior Manager
+      "6_to_7": 50000, // Senior Manager to Area Manager
+      "7_to_8": 75000, // Area Manager to Sector Head
     };
 
     const key = `${oldLevel}_to_${newLevel}`;

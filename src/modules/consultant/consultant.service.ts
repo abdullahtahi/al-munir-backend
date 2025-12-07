@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Op, Sequelize, Transaction, where } from "sequelize";
@@ -17,15 +18,19 @@ import {
 import { getErrorMessage, getPaginationOptions } from "@/helpers";
 import * as _ from "lodash";
 import { SEQUELIZE } from "@/constants";
+import { LEVEL_REQUIREMENTS } from "../../common/constants";
 import { Consultant } from "@/modules/consultant/consultant.entity";
 import { GlobalDbService } from "../global-db/global-db.service";
+import { BonusesService } from "../bonuses/bonuses.service";
 
 @Injectable()
 export class ConsultantService {
   constructor(
     private readonly db: GlobalDbService,
     @Inject(SEQUELIZE)
-    private readonly sequelize: Sequelize
+    private readonly sequelize: Sequelize,
+    @Inject(forwardRef(() => BonusesService))
+    private readonly bonusesService: BonusesService
   ) {}
 
   async create(createUserDto: any): Promise<any> {
@@ -215,6 +220,135 @@ export class ConsultantService {
 
     await user.update({ level });
     return user.reload();
+  }
+
+  async checkAndPromoteUser(userId: number): Promise<void> {
+    const user = await this.findById(userId);
+    if (!user) return;
+
+    const currentLevel = user.level;
+    let nextLevel: UserLevel | null = null;
+    let isTeamPromotion = false;
+
+    // Determine next level and promotion type
+    switch (currentLevel) {
+      case UserLevel.LEVEL_1:
+        nextLevel = UserLevel.LEVEL_2;
+        break;
+      case UserLevel.LEVEL_2:
+        nextLevel = UserLevel.LEVEL_3;
+        break;
+      case UserLevel.LEVEL_3:
+        nextLevel = UserLevel.LEVEL_4;
+        isTeamPromotion = true; // Level 3 -> 4 requires team structure
+        break;
+      case UserLevel.LEVEL_4:
+        nextLevel = UserLevel.MANAGER;
+        isTeamPromotion = true; // Level 4 -> Manager requires team structure
+        break;
+      // Add more transitions if needed
+      default:
+        return;
+    }
+
+    if (nextLevel) {
+      let shouldPromote = false;
+
+      if (isTeamPromotion) {
+        // Check team structure requirements
+        shouldPromote = await this.checkTeamStructurePromotion(userId, nextLevel);
+      } else {
+        // Check personal admission requirements (Levels 1-3)
+        const requirements = LEVEL_REQUIREMENTS[nextLevel];
+        if (requirements) {
+          const hasMetSchool = user.schoolAdmissions >= (requirements[AdmissionType.SCHOOL] || 0);
+          const hasMetAcademy = user.academyAdmissions >= (requirements[AdmissionType.ACADEMY] || 0);
+          const hasMetTechnical = user.technicalAdmissions >= (requirements[AdmissionType.TECHNICAL] || 0);
+          shouldPromote = hasMetSchool && hasMetAcademy && hasMetTechnical;
+        }
+      }
+
+      if (shouldPromote) {
+        console.log(`Promoting user ${userId} from ${currentLevel} to ${nextLevel}`);
+        
+        // Update level
+        await this.updateLevel(userId, nextLevel);
+
+        // Process progression bonus
+        await this.bonusesService.processProgressionBonus(
+          userId.toString(),
+          currentLevel,
+          nextLevel
+        );
+      }
+    }
+  }
+
+  private async checkTeamStructurePromotion(userId: number, targetLevel: UserLevel): Promise<boolean> {
+    // Logic based on PDF requirements:
+    // To Level 4: Lead at least 5 Level 3 Consultants (from different lines)
+    // To Manager: Lead at least 5 Level 4 Consultants (from different lines) - *Assumed based on pattern, user to confirm*
+    // For now implementing the "5 downlines of previous level in different lines" rule
+
+    let requiredDownlineLevel: UserLevel;
+    let requiredCount = 5;
+
+    if (targetLevel === UserLevel.LEVEL_4) {
+      requiredDownlineLevel = UserLevel.LEVEL_3;
+    } else if (targetLevel === UserLevel.MANAGER) {
+      requiredDownlineLevel = UserLevel.LEVEL_4;
+    } else {
+      return false;
+    }
+
+    // Get direct downlines (lines)
+    const directDownlines = await this.db.repo.Consultant.findAll({
+      where: { sponsorId: userId },
+      attributes: ['id']
+    });
+
+    if (directDownlines.length < requiredCount) return false;
+
+    let qualifiedLines = 0;
+
+    // Check each line for at least one consultant at the required level
+    for (const line of directDownlines) {
+      const hasQualifiedMember = await this.checkLineForLevel(line.id, requiredDownlineLevel);
+      if (hasQualifiedMember) {
+        qualifiedLines++;
+      }
+    }
+
+    return qualifiedLines >= requiredCount;
+  }
+
+  private async checkLineForLevel(rootId: number, targetLevel: UserLevel): Promise<boolean> {
+    // Check root of the line
+    const root = await this.db.repo.Consultant.findByPk(rootId, { attributes: ['level'] });
+    if (root && root.level === targetLevel) return true;
+
+    // Check downlines recursively (BFS/DFS)
+    // For performance, we might want to limit depth or use a recursive CTE if possible, 
+    // but for now we'll use a recursive function with depth limit
+    return this.searchLineRecursive(rootId, targetLevel);
+  }
+
+  private async searchLineRecursive(parentId: number, targetLevel: UserLevel, currentDepth: number = 0, maxDepth: number = 10): Promise<boolean> {
+    if (currentDepth > maxDepth) return false;
+
+    const children = await this.db.repo.Consultant.findAll({
+      where: { sponsorId: parentId },
+      attributes: ['id', 'level']
+    });
+
+    for (const child of children) {
+      if (child.level === targetLevel) return true;
+      
+      const foundInSubtree = await this.searchLineRecursive(child.id, targetLevel, currentDepth + 1, maxDepth);
+      if (foundInSubtree) return true;
+    }
+
+    return false;
   }
 
   async getTeamStructure(userId: number, depth: number = 3): Promise<any> {
@@ -408,24 +542,36 @@ export class ConsultantService {
   }
 
   async updateBalance(
-    user: any,
+    userOrId: any,
     amount: number,
     transaction?: Transaction
   ): Promise<void> {
+    let user = userOrId;
+    if (typeof userOrId === 'number' || typeof userOrId === 'string') {
+      user = await this.findById(Number(userOrId));
+    }
 
-    const newTotalEarnings = parseFloat(user.totalEarnings.toString()) + amount;
-    const newAvailableBalance =
-      parseFloat(user.availableBalance.toString()) + amount;
+    if (!user) {
+      throw new NotFoundException("User not found for balance update");
+    }
+
+    const currentTotal = user.totalEarnings ? parseFloat(user.totalEarnings.toString()) : 0;
+    const currentAvailable = user.availableBalance ? parseFloat(user.availableBalance.toString()) : 0;
+
+    const newTotalEarnings = currentTotal + amount;
+    const newAvailableBalance = currentAvailable + amount;
 
     await this.db.repo.Consultant.update(
       {
         totalEarnings: newTotalEarnings,
         availableBalance: newAvailableBalance,
       },
-{      where:{
-        id:user.id
-      }},
-      { transaction }
+      {
+        where: {
+          id: user.id
+        },
+        transaction
+      }
     );
   }
 

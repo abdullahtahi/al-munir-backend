@@ -6,20 +6,20 @@ module.exports = {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        allowNull: false,
+        allowNull: true,
         autoIncrement: true,
       },
       studentName: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       gender: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       phone: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       residentNumber: {
         type: Sequelize.STRING,
@@ -27,11 +27,11 @@ module.exports = {
       },
       profileImg: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       birthCertificate: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       schoolLeavingCertificate: {
         type: Sequelize.STRING,
@@ -39,51 +39,51 @@ module.exports = {
       },
       fatherCnicImgFront: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       fatherCnicImgBack: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       dateOfBirth: {
         type: Sequelize.DATE, // ✅ Use Sequelize.DATE (not Sequelize.Date)
-        allowNull: false,
+        allowNull: true,
       },
       fatherName: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       fatherEducation: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       fatherOccupation: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       fatherCnic: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       motherName: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       motherEducation: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       motherOccupation: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       motherCnic: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       permanentAddress: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       secondaryAddress: {
         type: Sequelize.STRING,
@@ -91,12 +91,12 @@ module.exports = {
       },
       createdAt: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: true,
         defaultValue: Sequelize.NOW,
       },
       updatedAt: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: true,
         defaultValue: Sequelize.NOW,
       },
     });

@@ -89,6 +89,8 @@ export class AdmissionsService {
               createAdmissionDto.sponsorId,
               createAdmissionDto.admissionType
             );
+            // Check for promotion
+            await this.consultantService.checkAndPromoteUser(createAdmissionDto.sponsorId);
           }
 
           if (admission?.id) {

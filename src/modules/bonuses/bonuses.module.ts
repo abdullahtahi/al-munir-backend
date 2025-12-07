@@ -7,7 +7,7 @@ import { databaseProviders } from '@/database/database.provider';
 import { ConsultantService } from '../consultant/consultant.service';
 
 @Module({
-  imports: [ConsultantModule],
+  imports: [forwardRef(() => ConsultantModule)],
   controllers: [BonusesController],
   providers: [BonusesService,...databaseProviders],
   exports: [BonusesService],

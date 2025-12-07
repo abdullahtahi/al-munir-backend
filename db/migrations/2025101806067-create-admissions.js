@@ -6,7 +6,7 @@ module.exports = {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        allowNull: false,
+        allowNull: true,
         autoIncrement: true,
       },
       consultantId: {
@@ -18,26 +18,26 @@ module.exports = {
       studentId: {
         type: Sequelize.INTEGER,
         field: 'fkStudentId',
-        allowNull: false,
+        allowNull: true,
         comment: 'Foreign key from Students table',
       },
       dependOnId: {
         type: Sequelize.INTEGER,
         field: 'fkDependOnId',
-        allowNull: false,
+        allowNull: true,
         comment: 'Foreign key from DependOn table',
       },
       admissionInClass: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       admissionType: {
         type: Sequelize.ENUM('school', 'academy', 'technical'),
-        allowNull: false,
+        allowNull: true,
       },
       feeAmount: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       commissionAmount: {
         type: Sequelize.INTEGER,
@@ -46,11 +46,11 @@ module.exports = {
       admissionDate: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
-        allowNull: false,
+        allowNull: true,
       },
       admissionNumber: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       status: {
         type: Sequelize.STRING,
@@ -58,12 +58,12 @@ module.exports = {
       },
       createdAt: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: true,
         defaultValue: Sequelize.NOW,
       },
       updatedAt: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: true,
         defaultValue: Sequelize.NOW,
       },
     });

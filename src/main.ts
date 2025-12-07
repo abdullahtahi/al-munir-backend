@@ -76,7 +76,7 @@ async function bootstrap() {
     // }
   );
 
-  const port = configService.get('PORT', 3000);
+  const port = configService.get('PORT', 5000);
   await app.listen(port);
 
   console.warn(`🚀 Al-Munir Consultancy API is running on: http://localhost:${port}`);
